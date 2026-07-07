@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SanaMente - Mi Acompañante Postquirúrgico</title>
+    <style>
+        /* PALETA DE COLORES CREMA Y DE DESCANSO VISUAL */
+        :root {
+            --bg-principal: #FDFBF7;    /* Crema/Marfil suave */
+            --bg-tarjeta: #F5F2EB;      /* Hueso un poco más oscuro */
+            --texto-principal: #2C2A29; /* Gris/Marrón ceniza oscuro */
+            --texto-secundario: #605C58;
+            --color-acento: #8A9A86;    /* Verde Sage relajante */
+            --color-alerta: #D98E73;    /* Terracota suave para avisos */
+            --borde: #E6E1DA;
+            --verde-exito: #E2EFE0;
+            --rojo-error: #F9EBE6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-principal);
+            color: var(--texto-principal);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--bg-principal);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.02);
+            border-left: 1px solid var(--borde);
+            border-right: 1px solid var(--borde);
+        }
+
+        header {
+            padding: 20px;
+            background-color: var(--bg-tarjeta);
+            border-bottom: 1px solid var(--borde);
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: var(--texto-principal);
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 80px;
+            overflow-y: auto;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .card {
+            background-color: var(--bg-tarjeta);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--borde);
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--texto-principal);
+        }
+
+        .disclaimer {
+            font-size: 0.75rem;
+            color: var(--color-alerta);
+            background-color: #FFF3EE;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #F7DCD0;
+            line-height: 1.3;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--borde);
+            background-color: var(--bg-principal);
+            color: var(--texto-principal);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .btn {
+            background-color: var(--color-acento);
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .btn:active { opacity: 0.8; }
+
+        /* LÍNEA DE TIEMPO */
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: var(--bg-tarjeta);
+            border-radius: 12px;
+            border-left: 4px solid var(--color-acento);
+        }
+
+        .timeline-time {
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 65px;
+            color: var(--color-acento);
+        }
+
+        .timeline-details { flex: 1; }
+
+        .timeline-title { font-weight: 600; font-size: 0.95rem; }
+
+        .timeline-tip {
+            font-size: 0.8rem;
+            color: var(--texto-secundario);
+            font-style: italic;
+            margin-top: 2px;
+        }
+
+        /* DISEÑO DE LA PESTAÑA NUTRICIÓN */
+        .diet-badge {
+            background-color: var(--color-acento);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .food-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .food-list li {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .food-list.allowed li {
+            background-color: var(--verde-exito);
+            color: #2E5A27;
+        }
+
+        .food-list.forbidden li {
+            background-color: var(--rojo-error);
+            color: #7A331E;
+        }
+
+        /* NAVEGACIÓN INFERIOR */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background-color: var(--bg-tarjeta);
+            border-top: 1px solid var(--borde);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--texto-secundario);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-item.active { color: var(--color-acento); font-weight: bold; }
+
+        .nav-item svg { width: 22px; height: 22px; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1 id="app-title">SanaMente</h1>
+    </header>
+
+    <div class="main-content">
+        
+        <div id="view-quiz" class="view active">
+            <div class="disclaimer">
+                <strong>Aviso Médico Importante:</strong> Esta aplicación es una herramienta de organización personal. Siga estrictamente lo dictado por su cirujano o centro de salud.
+            </div>
+            <div class="card">
+                <h2>⚙️ Configura tu Postoperatorio</h2>
+                <form id="quiz-form">
+                    <div class="form-group">
+                        <label>¿De qué te operaste?</label>
+                        <input type="text" id="quiz-tipo" placeholder="Ej: Cirugía abdominal, extracción dental" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Medicamento recetado</label>
+                        <input type="text" id="quiz-med" placeholder="Ej: Ibuprofeno 600mg o Amoxicilina" required>
+                    </div>
+                    <div class="form-group">
+                        <label>¿Cada cuántas horas?</label>
+                        <select id="quiz-frecuencia">
+                            <option value="6">Cada 6 horas</option>
+                            <option value="8" selected>Cada 8 horas</option>
+                            <option value="12">Cada 12 horas</option>
+                            <option value="24">Una vez al día</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>¿Requiere tomarse con comida fuerte?</label>
+                        <select id="quiz-comida">
+                            <option value="si">Sí, requiere base de alimento</option>
+                            <option value="no">No es obligatorio</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Dieta explícitamente indicada por el médico:</label>
+                        <select id="quiz-dieta">
+                            <option value="Blanda">Dieta Blanda / Fácil digestión</option>
+                            <option value="Líquida">Dieta Líquida Estricta</option>
+                            <option value="General">Dieta General / Sin restricciones</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Generar Plan de Acompañamiento</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="view-timeline" class="view">
+            <h2>📅 Tu Rutina de Hoy</h2>
+            <p style="font-size:0.85rem; margin-bottom:15px; color:var(--texto-secundario)">Horarios calculados de forma automática:</p>
+            <div id="timeline-container"></div>
+        </div>
+
+        <div id="view-nutrition" class="view">
+            <h2>🍏 Control de Nutrición Autorizado</h2>
+            <div id="diet-info-container" style="margin-top: 15px;">
+                </div>
+        </div>
+
+    </div>
+
+    <nav class="bottom-nav" id="main-nav" style="display:none;">
+        <button class="nav-item active" onclick="switchView('view-timeline')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Rutina
+        </button>
+        <button class="nav-item" onclick="switchView('view-nutrition')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 9.3M17 13v1.8c0 .7-.5 1.2-1.2 1.2H8.2c-.7 0-1.2-.5-1.2-1.2V13"/></svg>
+            Alimentos
+        </button>
+        <button class="nav-item" onclick="resetConfig()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+            Ajustes
+        </button>
+    </nav>
+</div>
+
+<script>
+    // BASE DE DATOS LOCAL EXCLUSIVA Y SEGURA
+    const BASE_DIETAS = {
+        "Líquida": {
+            descripcion: "Indicada generalmente para las primeras horas postcirugía o intervenciones maxilofaciales y gástricas.",
+            permitidos: ["Caldos claros colados (sin verduras sólidas)", "Gelatina regular", "Agua purificada", "Infusiones suaves (manzanilla, té ligero)"],
+            prohibidos: ["Lácteos de cualquier tipo", "Bebidas gaseosas", "Cualquier sólido o jugos con pulpa"]
+        },
+        "Blanda": {
+            descripcion: "Alimentos de consistencia suave, muy fáciles de masticar y digerir, bajos en grasa y condimentos irritantes.",
+            permitidos: ["Puré de calabaza, papa o zanahoria", "Manzana o pera cocida (compota)", "Arroz blanco bien cocido o fideos de pasta fina", "Pollo o pescado blanco hervido o a la plancha", "Huevo poché o pasado por agua"],
+            prohibidos: ["Comidas fritas o aceitosas", "Carnes rojas o embutidos", "Verduras crudas (lechuga, tomate) o legumbres", "Picantes, pimienta o café concentrado"]
+        },
+        "General": {
+            descripcion: "Dieta libre de restricciones severas. Se aconseja priorizar alimentos naturales para ayudar a la cicatrización.",
+            permitidos: ["Frutas y verduras variadas", "Proteínas magras a gusto", "Carbohidratos complejos", "Abundante agua mineral"],
+            prohibidos: ["Alcohol (interfiere críticamente con los medicamentos)", "Exceso de azúcares refinados o comida chatarra inflamatoria"]
+        }
+    };
+
+    let userConfig = JSON.parse(localStorage.getItem('postOpConfig')) || null;
+
+    document.getElementById('quiz-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        userConfig = {
+            cirugia: document.getElementById('quiz-tipo').value,
+            medicamento: document.getElementById('quiz-med`').value || document.getElementById('quiz-med').value,
+            frecuencia: parseInt(document.getElementById('quiz-frecuencia').value),
+            comida: document.getElementById('quiz-comida').value,
+            dieta: document.getElementById('quiz-dieta').value
+        };
+
+        localStorage.setItem('postOpConfig', JSON.stringify(userConfig));
+        renderApp();
+    });
+
+    function renderApp() {
+        if (userConfig) {
+            document.getElementById('view-quiz').classList.remove('active');
+            document.getElementById('main-nav').style.display = 'flex';
+            buildTimeline();
+            buildNutritionGuide();
+            switchView('view-timeline');
+        }
+    }
+
+    function switchView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        
+        document.getElementById(viewId).classList.add('active');
+        
+        if(viewId === 'view-timeline') document.querySelectorAll('.nav-item')[0].classList.add('active');
+        if(viewId === 'view-nutrition') document.querySelectorAll('.nav-item')[1].classList.add('active');
+    }
+
+    function buildTimeline() {
+        const container = document.getElementById('timeline-container');
+        container.innerHTML = '';
+
+        let horas = [];
+        for(let i = 8; i <= 23; i += userConfig.frecuencia) { horas.push(i); }
+
+        horas.forEach(h => {
+            const timeStr = `${h.toString().padStart(2, '0')}:00`;
+            const comidaTip = userConfig.comida === 'si' ? '⚠️ Nota: Ingerir alimentos autorizados antes de tomar.' : 'Tomar con abundante agua.';
+            
+            container.innerHTML += `
+                <div class="timeline-item">
+                    <div class="timeline-time">${timeStr}</div>
+                    <div class="timeline-details">
+                        <div class="timeline-title">💊 ${userConfig.medicamento}</div>
+                        <div class="timeline-tip">${comidaTip}</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function buildNutritionGuide() {
+        const container = document.getElementById('diet-info-container');
+        const dietaSeleccionada = BASE_DIETAS[userConfig.dieta];
+
+        if(!dietaSeleccionada) return;
+
+        let permitidosHtml = '';
+        dietaSeleccionada.permitidos.forEach(f => permitidosHtml += `<li>✓ ${f}</li>`);
+
+        let prohibidosHtml = '';
+        dietaSeleccionada.prohibidos.forEach(f => prohibidosHtml += `<li>✕ ${f}</li>`);
+
+        container.innerHTML = `
+            <div class="diet-badge">Dieta Actual: ${userConfig.dieta}</div>
+            <div class="card" style="margin-bottom:15px;">
+                <p style="font-size:0.95rem; line-height:1.4; color:var(--texto-principal)">${dietaSeleccionada.descripcion}</p>
+            </div>
+            
+            <h3 style="font-size:1rem; margin-bottom:5px; color:#2E5A27;">🟢 Alimentos Permitidos</h3>
+            <ul class="food-list allowed">${permitidosHtml}</ul>
+            
+            <h3 style="font-size:1rem; margin-top:20px; margin-bottom:5px; color:#7A331E;">🔴 Alimentos Prohibidos</h3>
+            <ul class="food-list forbidden">${prohibidosHtml}</ul>
+        `;
+    }
+
+    function resetConfig() {
+        if(confirm('¿Deseas modificar las indicaciones actuales de la aplicación?')) {
+            localStorage.removeItem('postOpConfig');
+            userConfig = null;
+            document.getElementById('main-nav').style.display = 'none';
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-quiz').classList.add('active');
+        }
+    }
+
+    renderApp();
+</script>
+</body>
+</html>
